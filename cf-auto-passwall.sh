@@ -32,14 +32,14 @@ green "=========================================================="
  red  "脚本第42行 bandwidth 后面的数值为期望优选带宽大小（ Mbps ）  "
 green "=================脚本正在运行中.....======================="
 sleep 8s
-/etc/init.d/haproxy stop
+test -e /etc/init.d/haproxy && /etc/init.d/haproxy stop
 /etc/init.d/passwall stop
 localport=8443
 remoteport=443
 declare -i bandwidth
 declare -i speed
 #下面 bandwidth 参数为带宽大小，请自行设置，默认 50
-bandwidth=50
+bandwidth=${1:-50}
 speed=bandwidth*128*1024
 starttime=`date +'%Y-%m-%d %H:%M:%S'`
 while true
@@ -418,8 +418,8 @@ done
 	echo 峰值速度 $max kB/s
 	echo 数据中心 $colo
 	echo 总计用时 $((end_seconds-start_seconds)) 秒
-	uci set passwall.xxxxxxxxxx.address=$anycast
+	uci set passwall.$(awk '$2 =="tcp_node" {print $3}' /etc/config/passwall | tr -d \').address=$anycast
 	uci commit passwall
-	/etc/init.d/haproxy restart
+	test -e /etc/init.d/haproxy && /etc/init.d/haproxy restart
 	/etc/init.d/passwall restart
 	exit
